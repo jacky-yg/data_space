@@ -97,6 +97,8 @@ int main() { std::string str; return 0; }
 
 set(LEVELDB_PUBLIC_INCLUDE_DIR "include/leveldb")
 set(LEVELDB_PORT_CONFIG_DIR "include/port")
+set(ISAL_CRYPTO_INCLUDE_DIR "/home/jacky/isa-l_crypto/include")
+set(ISAL_CRYPTO_LIB_DIR "/usr/lib")
 
 configure_file(
   "port/port_config.h.in"
@@ -106,6 +108,7 @@ configure_file(
 include_directories(
   "${PROJECT_BINARY_DIR}/include"
   "."
+  "${ISAL_CRYPTO_INCLUDE_DIR}"	
 )
 
 if(BUILD_SHARED_LIBS)
@@ -117,6 +120,10 @@ endif(BUILD_SHARED_LIBS)
 include(GNUInstallDirs)
 
 add_library(leveldb "")
+add_library(libisal_crypto STATIC IMPORTED)
+
+set_target_properties(libisal_crypto PROPERTIES IMPORTED_LOCATION "${ISAL_CRYPTO_LIB_DIR}/libisal_crypto.a")
+
 target_sources(leveldb
   PRIVATE
     "${PROJECT_BINARY_DIR}/${LEVELDB_PORT_CONFIG_DIR}/port_config.h"
@@ -319,6 +326,7 @@ if(LEVELDB_BUILD_TESTS)
         "${test_file}"
     )
     target_link_libraries("${test_target_name}" leveldb gmock gtest)
+    target_link_libraries("${test_target_name}" leveldb libisal_crypto)
     target_compile_definitions("${test_target_name}"
       PRIVATE
         ${LEVELDB_PLATFORM_NAME}=1
@@ -345,6 +353,9 @@ if(LEVELDB_BUILD_TESTS)
   leveldb_test("util/no_destructor_test.cc")
 
   if(NOT BUILD_SHARED_LIBS)
+    leveldb_test("test/getkey.cc")	
+    leveldb_test("test/readbuffer.cc")	
+    leveldb_test("test/table_builder_test.cc")	
     leveldb_test("db/autocompact_test.cc")
     leveldb_test("db/corruption_test.cc")
     leveldb_test("db/db_test.cc")
